@@ -1,51 +1,55 @@
-def sum(a, b, c ):
-    return a + b + c
+import tkinter as tk
+from tkinter import messagebox
 
-def printBoard(xState, zState):
-    zero = 'X' if xState[0] else ('O' if zState[0] else 0)
-    one = 'X' if xState[1] else ('O' if zState[1] else 1)
-    two = 'X' if xState[2] else ('O' if zState[2] else 2)
-    three = 'X' if xState[3] else ('O' if zState[3] else 3)
-    four = 'X' if xState[4] else ('O' if zState[4] else 4)
-    five = 'X' if xState[5] else ('O' if zState[5] else 5)
-    six = 'X' if xState[6] else ('O' if zState[6] else 6)
-    seven = 'X' if xState[7] else ('O' if zState[7] else 7)
-    eight = 'X' if xState[8] else ('O' if zState[8] else 8)
-    print(f"{zero} | {one} | {two} ")
-    print(f"--|---|---")
-    print(f"{three} | {four} | {five} ")
-    print(f"--|---|---")
-    print(f"{six} | {seven} | {eight} ") 
+def check_win(state):
+    wins = [(0,1,2), (3,4,5), (6,7,8), (0,3,6), (1,4,7), (2,5,8), (0,4,8), (2,4,6)]
+    for w in wins:
+        if sum(state[0][i] for i in w) == 3: return "X"
+        if sum(state[1][i] for i in w) == 3: return "O"
+    return "Draw" if sum(state[0]) + sum(state[1]) == 9 else None
 
-def checkWin(xState, zState):
-    wins = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]
-    for win in wins:
-        if(sum(xState[win[0]], xState[win[1]], xState[win[2]]) == 3):
-            print("X Won the match")
-            return 1
-        if(sum(zState[win[0]], zState[win[1]], zState[win[2]]) == 3):
-            print("O Won the match")
-            return 0
-    return -1
+def on_click(index):
+    global turn, state, buttons
+    if state[0][index] or state[1][index]:
+        return
     
-if __name__ == "__main__":
-    xState = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-    zState = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-    turn = 1 # 1 for X and 0 for O
-    print("Welcome to Tic Tac Toe")
-    while(True):
-        printBoard(xState, zState)
-        if(turn == 1):
-            print("X's Chance")
-            value = int(input("Please enter a value: "))
-            xState[value] = 1
-        else:
-            print("O's Chance")
-            value = int(input("Please enter a value: "))
-            zState[value] = 1
-        cwin = checkWin(xState, zState)
-        if(cwin != -1):
-            print("Match over")
-            break
-        
+    state[turn][index] = 1
+    buttons[index].config(text="X" if turn == 0 else "O", state=tk.DISABLED)
+    winner = check_win(state)
+    if winner:
+        messagebox.showinfo("Game Over", "It's a draw!" if winner == "Draw" else f"{winner} wins!")
+        reset_game()
+    else:
         turn = 1 - turn
+        status_label.config(text=f"{'X' if turn == 0 else 'O'}'s Turn")
+
+def reset_game():
+    global state, turn, buttons
+    state = [[0]*9, [0]*9]
+    turn = 0
+    for btn in buttons:
+        btn.config(text="", state=tk.NORMAL)
+    status_label.config(text="X's Turn")
+
+root = tk.Tk()
+root.title("Tic-Tac-Toe")
+
+state = [[0]*9, [0]*9]
+turn = 0
+
+status_label = tk.Label(root, text="X's Turn", font=("Arial", 14))
+status_label.pack()
+
+frame = tk.Frame(root)
+frame.pack()
+
+buttons = []
+for i in range(9):
+    btn = tk.Button(frame, text="", font=("Arial", 20), width=5, height=2, command=lambda i=i: on_click(i))
+    btn.grid(row=i//3, column=i%3)
+    buttons.append(btn)
+
+reset_btn = tk.Button(root, text="Reset", font=("Arial", 12), command=reset_game)
+reset_btn.pack()
+
+root.mainloop()
